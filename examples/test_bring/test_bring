@@ -14,7 +14,7 @@
 
     (:operator (!pickup ?a)
                ()
-               ((clear ?a) (on-table ?a))
+               ((wrong_loc ?b) (on ?o ?loc))
                ((holding ?a)))
 
     (:operator (!putdown ?b)
@@ -96,33 +96,38 @@
              nil)
 
     (:method (tidy_up ?loc)
+             (forall (?o) (object ?o) (not (on ?o ?loc)))
+             nil
+
              ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc))
              ((bring ?o ?to-loc) (tidy_up ?loc))
 
-             nil
-             nil)
+              )
 
     (:method (bring ?o ?to-loc)
+
              ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (belongs ?o ?to-loc))
-             ((bring ?o ?loc ?to-loc))
+             ((bring ?o ?loc ?to-loc) (bring ?o ?to-loc))
 
              nil
-             nil)
+             nil
+             )
+
 
 
     (:method (bring ?o ?loc ?to-loc)
-             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (at robot ?loc) (has robot tray) (not (on-tray ?o)))
+             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (at robot ?loc) (has robot tray) (not (holding ?o)))
              ((get ?o ?loc) (bring ?o ?loc ?to-loc))
 
              ((object ?o) (location ?loc) (location ?to-loc) (not (at robot ?to-loc)))
              ((carry ?o ?to-loc) (bring ?o ?loc ?to-loc))
 
-             nil
+             nil 
              nil)
 
     (:method (get ?o ?loc)
-             ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (on-tray ?o)))
-             ((!put-on-tray ?o) (get ?o ?loc))
+             ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (holding ?o)))
+             ((!pickup ?o) (get ?o ?loc))
 
              nil
              nil)
@@ -130,7 +135,7 @@
 
     (:method (carry ?o ?loc)
 
-             ((object ?o) (location ?loc) (on-tray ?o) (not (at robot ?loc)))
+             ((object ?o) (location ?loc) (holding ?o) (not (at robot ?loc)))
              ((!go_to ?loc) (carry ?o ?loc))
 
              nil
