@@ -91,3 +91,24 @@ d: src/JSHOP2/*.java
 	cd examples/madrts; javac gui.java
 	cd examples/madrts; java gui 
 	cd examples/madrts; rm madrts.java; rm madrts.txt; rm problem.java; rm *.class
+
+tea: bin.build/JSHOP2.jar
+	cd examples/makeTea; java JSHOP2.InternalDomain makeTea
+	cd examples/makeTea; java JSHOP2.InternalDomain -ra problem
+	cd examples/makeTea; javac gui.java
+	cd examples/makeTea; java gui 
+	cd examples/makeTea; rm makeTea.java; rm madrts.txt; rm problem.java; rm *.class
+
+test_code: bin.build/JSHOP2.jar
+	cd examples/test_code; java JSHOP2.InternalDomain test_code
+	cd examples/test_code; java JSHOP2.InternalDomain -ra problem
+	cd examples/test_code; javac gui.java
+	cd examples/test_code; java gui 
+	cd examples/test_code; rm test_code.java; rm madrts.txt; rm problem.java; rm *.class
+
+test_bring: bin.build/JSHOP2.jar
+	cd examples/test_bring; java JSHOP2.InternalDomain test_bring
+	cd examples/test_bring; java JSHOP2.InternalDomain -ra problem
+	cd examples/test_bring; javac gui.java
+	cd examples/test_bring; java gui 
+	cd examples/test_bring; rm test_bring.java; rm test_bring.txt; rm problem.java; rm *.class	

@@ -1,0 +1,141 @@
+;;; This file contains a SHOP domain representation of the block-stacking
+;;; algorithm from the following paper:
+;;;    N. Gupta and D. Nau, On the complexity of blocks-world planning,
+;;;    Artificial Intelligence 56(2-3):223-254, August 1992.
+
+
+;;; ------------------------------------------------------------------------
+;;; Declare all the data
+;;; ------------------------------------------------------------------------
+
+(defdomain test_bring
+  (
+    ;; basic block-stacking operators
+
+    (:operator (!pickup ?a)
+               ()
+               ((clear ?a) (on-table ?a))
+               ((holding ?a)))
+
+    (:operator (!putdown ?b)
+               ()
+               ((holding ?b))
+               ((on-table ?b) (clear ?b)))
+
+    (:operator (!putdown ?b ?loc)
+               ()
+               ()
+               ((on ?b ?loc)))
+
+    (:operator (!put-on-tray ?b)
+               ()
+               ((wrong_loc ?b) (on ?o ?loc))
+               ((on-tray ?b)))               
+
+    (:operator (!putdown ?b ?loc)
+               ()
+               ()
+               ((on ?b ?loc)))
+
+    (:operator (!go_to ?loc)
+               ((at robot ?to-loc))
+               ((at robot ?to-loc))
+               ((at robot ?loc)))
+
+    (:operator (!unstack ?e ?f)
+               ()
+               ((clear ?e) (on ?e ?f))
+               ((holding ?e) (clear ?f)))
+
+    ;; book-keeping methods & ops, to keep track of what needs to be done
+    (:operator (!!assert ?g)
+               ()
+               ()
+               (?g)
+               ;; Since !!ASSERT isn't a real blocks-world operator, make its cost 0
+               0)
+
+    (:operator (!!remove ?g)
+               ()
+               (?g)
+               ()
+               ;; Since !!REMOVE isn't a real blocks-world operator, make its cost 0
+               0)
+
+    ;; The method for the top-layer task
+    (:method (achieve-goals ?goals)
+             ()
+             ((assert-goals ?goals)
+             (find-nomove) (add-new-goals) (find-movable) (move-block)))
+
+    (:method (assert-goals (?goal . ?goals))
+             ()
+             ((!!assert (goal ?goal))
+              (assert-goals ?goals)))
+
+    (:method (assert-goals nil)
+             ()
+             ())
+
+    (:method (find-nomove ?loc)
+             ((object ?o) (location ?loc) (not (dont-move ?o)) (belongs ?o ?loc) (on ?o ?loc))
+             ((!!assert (dont-move ?o)) (find-nomove ?loc))
+             nil
+             nil)
+
+
+
+    (:method (find-movable ?loc)
+             ((object ?o) (not (dont-move ?o)) (not (belongs ?o ?loc)) (on ?o ?loc)
+              (not (wrong_loc ?o)))
+             ; Decomposition
+             ((!!assert (wrong_loc ?o)) (find-movable ?loc))
+
+
+             nil
+             nil)
+
+    (:method (tidy_up ?loc)
+             ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc))
+             ((bring ?o ?to-loc) (tidy_up ?loc))
+
+             nil
+             nil)
+
+    (:method (bring ?o ?to-loc)
+             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (belongs ?o ?to-loc))
+             ((bring ?o ?loc ?to-loc))
+
+             nil
+             nil)
+
+
+    (:method (bring ?o ?loc ?to-loc)
+             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (at robot ?loc) (has robot tray) (not (on-tray ?o)))
+             ((get ?o ?loc) (bring ?o ?loc ?to-loc))
+
+             ((object ?o) (location ?loc) (location ?to-loc) (not (at robot ?to-loc)))
+             ((carry ?o ?to-loc) (bring ?o ?loc ?to-loc))
+
+             nil
+             nil)
+
+    (:method (get ?o ?loc)
+             ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (on-tray ?o)))
+             ((!put-on-tray ?o) (get ?o ?loc))
+
+             nil
+             nil)
+
+
+    (:method (carry ?o ?loc)
+
+             ((object ?o) (location ?loc) (on-tray ?o) (not (at robot ?loc)))
+             ((!go_to ?loc) (carry ?o ?loc))
+
+             nil
+             nil)
+
+
+  )
+)
