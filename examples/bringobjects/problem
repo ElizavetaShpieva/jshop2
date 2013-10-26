@@ -1,0 +1,13 @@
+(defproblem problem bringanobject
+ (
+  (at jenny base)
+  (at pringles dinner_table)
+  (in guest living_room)
+  (at-init-pose jenny)
+  (at ketchup dinner_table)  
+ )
+
+ (
+  (bring_an_object jenny pringles guest)
+ )
+)

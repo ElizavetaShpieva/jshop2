@@ -1,0 +1,291 @@
+;;==========Approach Pose===========
+
+;;Operators
+;;
+;;
+(defdomain bringanobject1
+    (
+        (:operator (!move_base ?robot ?to)
+            ;;Precondition
+            ()
+            ;;Deleted effects
+            ()
+            ;;Add effects
+            ((at ?robot ?to))
+        )
+
+;;==========Detect Object===========
+        (:operator (!move_to_detectobject_pose ?robot)
+            ;;Precondition
+            ((at ?robot ?table))
+            ;;Deleted effects
+            () 
+            ;;Add effects
+            ((at-detect-object-pose ?robot))
+        )
+;;
+;;
+;;
+;;
+        (:operator (!detect_objects ?robot)
+            ;;Precondition
+            ((at-detect-object-pose ?robot)
+            (at ?robot ?table)
+            (not (hold ?robot ?object)))
+            ;;Deleted effects
+            ()
+            ;;Add effects
+            ((at ?table ?object ?object ?object))
+        ) 
+;;
+;;
+        (:operator (!detect_specific_object ?robot ?specific-object)
+            ;;Precondition
+            ((at-detect-object-pose ?robot) ;;||((at ?robot ?detect-object-pose 
+            (at ?robot ?table)
+            (not (hold ?robot ?object))
+            (at ?table ?object ?object)) 
+            ;;Deleted effects
+            ()
+            ;;Add effects
+            ((at ?table ?specific-object)
+            (obj-detected ?robot ?object))
+        )
+;;
+;;==========Grasp Object===========
+        (:operator (!move_to_pregrasp_pose ?robot)
+            ;;Precondition
+            ((at ?robot ?table)
+            (at-detect-object-pose ?robot))
+            ;;Deleted effects
+            ((at-detect-object-pose ?robot))
+            ;;Add effects
+            ((at-pregrasp-object-pose ?robot))
+        ) 
+;;
+;;
+        (:operator (!pickup_object ?robot ?specific-object ?from-table)
+            ;;Precondition
+            ((at-pregrasp-object-pose ?robot)
+            (at ?robot ?table)
+            (at ?table ?specific-object)
+            (not (hold ?robot ?object)))
+            ;;Deleted effects
+            ((at ?table ?specific-object))
+            ;;Add effects
+            ((hold ?robot ?specific-object))
+        )
+;;
+;;
+;;==========Release Object=========
+
+;;
+        (:operator (!releasing_object ?robot ?object ?to-person)
+            ;;Precondition
+            ((not (at ?robot ?table))
+            (at ?to-person ?room)
+            (hold ?robot ?object))
+            ;;Deleted effects
+            ((hold ?robot ?object))
+            ;;Add effects
+            ((has ?object ?to-person))
+        )   
+;;
+;;
+        (:operator (!move_to_home_pose ?robot)
+            ;;Precondition
+            ((at ?robot ?room)
+            (not (hold ?robot ?object))
+            (not (at ?object ?table)))
+            ;;Deleted effects
+            ()
+            ;;Add effects
+            ((home-pose ?robot))
+        )
+
+
+;;
+;;Methods
+;;
+
+(:method (bring_an_object ?robot ?object ?to-person)
+            ;;Precondition list
+            (
+                (at ?object ?table)
+            )
+            ;;Task list
+            (
+                (bring_an_object ?robot ?object ?table ?to-person)
+            )
+        )
+;;
+;;
+(:method (bring_an_object ?robot ?object ?table ?person)
+            ;;Precondition list
+            (
+                (at-base-pose ?robot)
+            )
+            ;;Task list
+            (
+                (drive_robot ?robot ?table) (bring_an_object ?robot ?object ?table ?person)
+            )
+            ;;Precondition list
+            (
+                (at ?robot ?table)
+            )    
+            ;;Task list
+            (
+                (detect_an_object ?robot ?object ?on-table) (bring_an_object ?robot ?object ?table ?person)
+            )
+            ;;Precondition list
+            (
+                (at ?object ?table)
+                (at ?robot ?table)
+            )
+            ;;Task list
+            (
+                (grasp_an_object ?robot ?object ?from-table) (bring_an_object ?robot ?object ?table ?person)
+            )
+            ;;Precondition list
+            (
+                (hold ?robot ?object)
+                (at ?robot ?table)
+            )
+            ;;Task list
+            (
+                (drive_robot ?robot ?room) (bring_an_object ?robot ?object ?table ?person)
+            )
+            ;;Precondition list
+            (
+                (hold ?robot ?object)
+                (not (at ?robot ?table))
+            )
+            ;;Task list
+            (
+                (release_an_object ?object ?to-person) 
+            )
+        )
+;;
+;;
+;;========Drive-robot==========
+(:method (drive_robot ?robot ?to)
+            ;;Precondition list
+            ()
+            ;;Task list
+            (
+                (!move_base ?robot ?to)
+            )
+            ;;Precondition list
+            (
+                (at ?robot ?to)
+            )
+            ;;Task list
+            ()
+
+        )
+;;
+;;
+
+;;========Detect Object========
+(:method (detect_an_object ?robot ?object ?table)
+                        ;;Precondition list
+            (
+                (obj-detected ?robot ?object)
+                (at ?robot ?table)
+            )
+            ;;Task list
+            ()
+            ;;Precondition list
+            (
+                (at ?table)
+            )
+            ;;Task list
+            (
+                (move_to_detectobject_pose) (detect_an_object ?robot ?object ?on-table)
+            )
+            ;;Precondition list
+            (
+                (at-detect-object-pose ?robot)
+                (at ?robot ?table)
+            )
+            ;;Task list
+            (
+                (!detect_object ?robot ?any-object)
+                (detect_an_object ?robot ?object ?on-table)
+            )
+            ;;Precondition list
+            (
+                (at-detect-object-pose ?robot)
+                (at ?robot ?table)
+                (at ?table ?object ?object)
+            )
+            ;;Task list
+            (
+                (!detect_specific_object ?robot ?specific-object)
+            )
+        )
+;;========Grasp Object==========
+
+
+(:method (grasp_an_object ?robot ?object ?table)
+            ;;Precondition list
+            (
+                (at ?robot ?table)
+                (at ?object ?robot)
+            )
+            ;;Task list
+            ()
+            ;;Precondition list
+            (
+                (at ?robot ?table)
+                (at ?object ?table)
+            )
+            ;;Task list
+            (
+                (move_to_pregrasp_pose) (grasp_an_object ?robot ?object ?from-table)
+            )
+            ;;Precondition list
+            (
+                (pregrasp-object-pose ?robot)
+                (at ?robot ?table)
+                (not (hold ?robot ?object))
+            )
+            ;;Task list
+            (
+                (!pickup_object ?robot ?object ?from-table)
+            )
+        )
+;;========Release Object=======
+
+;;
+;;
+(:method (release_an_object ?object ?to-person)
+            ;;Precondition list
+            (
+                (hold ?robot ?object)
+            )
+            ;;Task list
+            (
+                (move_to_releaseobject_pose) (release_an_object ?object ?to-person)
+            )
+            ;;Precondition list
+            (
+                (release-object-pose ?robot)
+                (hold ?robot ?object)
+                (in ?room ?to-person)
+            )
+            ;;Task list
+            (
+                (!release_object ?robot ?object ?to-person)
+            )
+            ;;Precondition list
+            (
+                (not (hold ?robot ?object))
+            )
+            ;;Task list
+            (
+                (move_to_home_pose)
+            )
+        )
+
+))

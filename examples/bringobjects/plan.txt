@@ -1,0 +1,9 @@
+8.0
+move_base jenny dinner_table
+move_to_detectobject_pose jenny
+detect_object pringles dinner_table
+move_to_pickupobjectpose jenny
+pickup_object pringles dinner_table
+move_base jenny living_room
+release_object pringles guest
+move_to_home_pose jenny

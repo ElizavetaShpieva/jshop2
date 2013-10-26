@@ -1,0 +1,17 @@
+(defproblem problem bringanobject1
+( 
+	(at table living-room)
+	(room living-room)
+	(at Jenny base-pose)
+	(at dinner-table living-room)
+	(at pringles dinner-table)
+	(at ketchup dinner-table)
+	(at pringles dinner-table)
+	(in person living-room)
+	(at sofa living-room)
+	(at couch-table living-room)
+	(attached living-room kitchen)
+	(room kitchen)
+)
+((bring_an_object Jehnny pringles person))
+)

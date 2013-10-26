@@ -1,0 +1,61 @@
+(:method (detect_an_object ?robot ?object ?table)
+            ;;Precondition list
+            (
+                (obj-detected ?robot ?object)
+                (at ?robot ?from)
+            )
+            ;;Task list
+            ()
+            ;;Precondition list
+            (
+                (at ?robot ?from)
+            )
+            ;;Task list
+            (
+                ;;(!move_to_detectobject_pose ?robot)
+                (detect_an_object ?robot ?object ?table)
+            )
+            ;;Precondition list
+            (
+                (at-detect-object-pose ?robot)
+                (at ?robot ?from)
+            )
+            ;;Task list
+            (
+                (!detect_object ?robot ?any-object)
+                (detect_an_object ?robot ?object ?from)
+            )
+            ;;Precondition list
+            (
+                (at-detect-object-pose ?robot)
+                (at ?robot ?from)
+                (at ?table ?object ?object)
+            )
+            ;;Task list
+            (
+                (!detect_specific_object ?robot ?object)
+            )
+        )
+
+
+
+
+(:method (detect_an_object ?robot ?object ?from)
+            ;;Precondition list
+            ()
+            ;;Task list
+            (
+                (!move_to_detectobject_pose ?robot)
+                (detect_an_object ?robot ?object ?from)
+            )
+            )
+
+            ;;Precondition list
+            (
+                (at ?robot ?from)
+                ;;(at-detect-object-pose ?robot)
+            )
+            ;;Task list
+            (
+                (!detect_specific_object ?robot ?object)
+            )
