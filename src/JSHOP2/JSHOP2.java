@@ -170,7 +170,10 @@ public class JSHOP2
 
     //-- Initialize numPlans within JSHOP2GUI
     JSHOP2GUI.setNumPlans(numPlans);
-
+    //-- Initialize planStepList  within JSHOP2Output  
+    JSHOP2Output.setPlans(planStepList);
+    //-- Initialize numPlans within JSHOP2Output
+    JSHOP2Output.setPlanCount(numPlans);
     //-- Return the found plan(s).
     return plans;
   }
