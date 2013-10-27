@@ -1,8 +1,3 @@
-;;; This file contains a SHOP domain representation of the block-stacking
-;;; algorithm from the following paper:
-;;;    N. Gupta and D. Nau, On the complexity of blocks-world planning,
-;;;    Artificial Intelligence 56(2-3):223-254, August 1992.
-
 
 ;;; ------------------------------------------------------------------------
 ;;; Declare all the data
@@ -13,29 +8,29 @@
     ;; basic block-stacking operators
 
     (:operator (!pickup ?a)
-               ()
-               ((wrong_loc ?b) (on ?o ?loc))
-               ((holding ?a)))
+               ((on ?a ?loc))
+               ((wrong_loc ?a) (on ?a ?loc))
+               ((holding ?a) (has robot ?a)))
 
     (:operator (!putdown ?b)
                ()
                ((holding ?b))
-               ((on-table ?b) (clear ?b)))
+               ((on-table ?b)))
 
     (:operator (!putdown ?b ?loc)
                ()
-               ()
+               ((on-tray ?b))
                ((on ?b ?loc)))
 
     (:operator (!put-on-tray ?b)
-               ()
-               ((wrong_loc ?b) (on ?o ?loc))
-               ((on-tray ?b)))               
+               ((on ?a ?loc))
+               ((wrong_loc ?b) (on ?b ?loc))
+               ((on-tray ?b) (has robot ?b)))               
 
-    (:operator (!putdown ?b ?loc)
-               ()
-               ()
-               ((on ?b ?loc)))
+    ; (:operator (!putdown ?b ?loc)
+    ;            ()
+    ;            ()
+    ;            ((on ?b ?loc)))
 
     (:operator (!go_to ?loc)
                ((at robot ?to-loc))
@@ -60,7 +55,7 @@
                (?g)
                ()
                ;; Since !!REMOVE isn't a real blocks-world operator, make its cost 0
-               0)
+               )
 
     ;; The method for the top-layer task
     (:method (achieve-goals ?goals)
@@ -96,47 +91,62 @@
              nil)
 
     (:method (tidy_up ?loc)
-             (forall (?o) (object ?o) (not (on ?o ?loc)))
-             nil
 
-             ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc))
+             ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc) (not (has robot ?o)))
              ((bring ?o ?to-loc) (tidy_up ?loc))
-
-              )
-
-    (:method (bring ?o ?to-loc)
-
-             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (belongs ?o ?to-loc))
-             ((bring ?o ?loc ?to-loc) (bring ?o ?to-loc))
 
              nil
              nil
              )
 
+    (:method (bring ?o ?to-loc)
+
+             ((object ?o) (location ?loc)  (location ?to-loc) (on ?o ?loc) (belongs ?o ?to-loc))
+             ((bring ?o ?loc ?to-loc))
+               
+               nil
+               nil
+              )
 
 
     (:method (bring ?o ?loc ?to-loc)
-             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (at robot ?loc) (has robot tray) (not (holding ?o)))
-             ((get ?o ?loc) (bring ?o ?loc ?to-loc))
+             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (not (has robot ?o)))
+             ((get ?o ?loc)(bring ?o ?loc ?to-loc))
 
-             ((object ?o) (location ?loc) (location ?to-loc) (not (at robot ?to-loc)))
-             ((carry ?o ?to-loc) (bring ?o ?loc ?to-loc))
+             ((object ?o)  (location ?loc) (location ?to-loc) (not (on ?o ?loc)) (has robot ?o))
+             ((carry ?o ?to-loc))
 
-             nil 
-             nil)
+             nil
+             nil
+             )
 
     (:method (get ?o ?loc)
-             ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (holding ?o)))
-             ((!pickup ?o) (get ?o ?loc))
+             ((location ?loc) (not (at robot ?loc)) (not (has robot ?o)))
+             ((!go_to ?loc) (get ?o ?loc))
+
+             ((object ?o) (location ?loc) (not (has robot ?o)))
+             ((get ?o))
+
+             nil
+             nil)
+
+    (:method (get ?o)
+             ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (has robot ?o)) (not (on-tray ?o)))
+             ((!put-on-tray ?o))
+
+             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (not (holding ?o)))
+             ((!pickup ?o))
 
              nil
              nil)
 
 
     (:method (carry ?o ?loc)
+             ;;((object ?o) (location ?loc) (not (on-tray ?o)))
+             ;;((!put-on-tray ?o) (carry ?o ?loc))
 
-             ((object ?o) (location ?loc) (holding ?o) (not (at robot ?loc)))
-             ((!go_to ?loc) (carry ?o ?loc))
+             ((object ?o) (location ?loc) (not (at robot ?loc)))
+             ((!putdown ?o ?loc))
 
              nil
              nil)
