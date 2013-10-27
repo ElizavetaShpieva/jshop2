@@ -27,10 +27,10 @@
                ((wrong_loc ?b) (on ?b ?loc))
                ((on-tray ?b) (has robot ?b)))               
 
-    ; (:operator (!putdown ?b ?loc)
-    ;            ()
-    ;            ()
-    ;            ((on ?b ?loc)))
+    (:operator (!detect_objects ?loc)
+               ((at robot ?loc))
+               ()
+               ((objects-detected ?loc)))
 
     (:operator (!go_to ?loc)
                ((at robot ?to-loc))
@@ -92,8 +92,15 @@
 
     (:method (tidy_up ?loc)
 
-             ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc) (not (has robot ?o)))
-             ((bring ?o ?to-loc) (tidy_up ?loc))
+            ((location ?loc) (at robot ?loc) (not (has robot ?o)) (not (wrong_loc ?o)) (objects-detected ?loc))
+            ((find-movable ?loc) (tidy_up ?loc))
+
+
+            ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc) (not (has robot ?o)) (objects-detected ?loc))
+            ((bring ?o ?to-loc) (tidy_up ?loc))
+
+             ((object ?o) (location ?loc) (at robot ?loc) (not (has robot ?o)) (not(objects-detected ?loc)))
+             ((!detect_objects ?loc))
 
              nil
              nil
