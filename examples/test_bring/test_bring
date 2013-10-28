@@ -19,7 +19,7 @@
 
     (:operator (!putdown ?b ?loc)
                ()
-               ((on-tray ?b))
+               ((holding ?b) (has robot ?b))
                ((on ?b ?loc)))
 
     (:operator (!put-on-tray ?b)
@@ -41,6 +41,19 @@
                ()
                ((clear ?e) (on ?e ?f))
                ((holding ?e) (clear ?f)))
+    (:operator (!approach ?a)
+                ()
+                ()
+                ((manipulator ready)))
+    (:operator (!open ?a)
+                ((manipulator read))
+                ((closed ?a))
+                ((opened ?a)))
+
+    (:operator (!close ?a)
+                ((opened ?a))
+                ((opened ?a))
+                ((closed ?a)))
 
     ;; book-keeping methods & ops, to keep track of what needs to be done
     (:operator (!!assert ?g)
@@ -92,6 +105,9 @@
 
     (:method (tidy_up ?loc)
 
+             ((location ?loc) (not (at robot ?loc)) (not (has robot ?o)))
+             ((!go_to ?loc) (tidy_up ?loc))
+
             ((location ?loc) (at robot ?loc) (not (has robot ?o)) (not (wrong_loc ?o)) (objects-detected ?loc))
             ((find-movable ?loc) (tidy_up ?loc))
 
@@ -131,6 +147,13 @@
              ((location ?loc) (not (at robot ?loc)) (not (has robot ?o)))
              ((!go_to ?loc) (get ?o ?loc))
 
+              ;; inside , closed door (within robot ?room) 
+              ((object ?o) (haspart ?loc ?cdoor) (closed ?loc) (inside ?o ?loc) (at robot ?loc) (cdoor ?cdoor) (not (has robot ?o)))
+              ((!approach ?cdoor) (!open ?cdoor) (get ?o) (get ?o ?loc))
+
+              ((object ?o) (haspart ?loc ?cdoor) (opened ?loc) (at robot ?loc) (cdoor ?cdoor)  (has robot ?o) (on-tray ?o))
+              ((!close ?cdoor))
+
              ((object ?o) (location ?loc) (not (has robot ?o)))
              ((get ?o))
 
@@ -138,21 +161,47 @@
              nil)
 
     (:method (get ?o)
-             ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (has robot ?o)) (not (on-tray ?o)))
-             ((!put-on-tray ?o))
+
+             ((object ?o) (not (has robot ?o)) (not(objects-detected ?loc)))
+             ((detect ?o) (get ?o))
+
+             ((object ?o) (not (has robot ?o)) (on ?o ?loc) (not (holding ?o)))
+             ((grasp ?o))
+
+             nil
+             nil)
+
+    (:method (detect ?o)
+
 
              ((object ?o) (not (has robot tray)) (not (has robot ?o)) (not (holding ?o)))
+             ((!detect ?o))
+
+             ((object ?o) (not (has robot ?o))(not (holding ?o)))
+             ((!to-detect-pose ?robot) (detect ?o))
+
+             nil
+             nil)
+
+    (:method (grasp ?o)
+
+
+             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (on ?o ?loc) (not (holding ?o)))
              ((!pickup ?o))
+
+             ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (has robot ?o)) (not (on-tray ?o)))
+             ((!put-on-tray ?o))
 
              nil
              nil)
 
 
     (:method (carry ?o ?loc)
-             ;;((object ?o) (location ?loc) (not (on-tray ?o)))
-             ;;((!put-on-tray ?o) (carry ?o ?loc))
+             ((location ?loc) (not (at robot ?loc)) (has robot ?o))
+             ((!go_to ?loc) (carry ?o ?loc))
 
-             ((object ?o) (location ?loc) (not (at robot ?loc)))
+
+             ((object ?o) (location ?loc) (at robot ?loc) (has robot ?o))
              ((!putdown ?o ?loc))
 
              nil
