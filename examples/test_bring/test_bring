@@ -108,8 +108,8 @@
              ((location ?loc) (not (at robot ?loc)) (not (has robot ?o)))
              ((!go_to ?loc) (tidy_up ?loc))
 
-            ((location ?loc) (at robot ?loc) (not (has robot ?o)) (not (wrong_loc ?o)) (objects-detected ?loc))
-            ((find-movable ?loc) (tidy_up ?loc))
+             ((location ?loc) (at robot ?loc) (not (has robot ?o)) (not (wrong_loc ?o)) (not (dont-move ?o)) (objects-detected ?loc))
+             ((find-nomove ?loc) (find-movable ?loc) (tidy_up ?loc))
 
 
             ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc) (not (has robot ?o)) (objects-detected ?loc))
