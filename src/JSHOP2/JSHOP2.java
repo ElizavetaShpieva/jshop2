@@ -174,6 +174,10 @@ public class JSHOP2
     JSHOP2Output.setPlans(planStepList);
     //-- Initialize numPlans within JSHOP2Output
     JSHOP2Output.setPlanCount(numPlans);
+
+    JSHOP2PlanToJSONFile.setPlans(planStepList);
+    //-- Initialize numPlans within JSHOP2Output
+    JSHOP2PlanToJSONFile.setPlanCount(numPlans);
     //-- Return the found plan(s).
     return plans;
   }
