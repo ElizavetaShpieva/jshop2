@@ -667,7 +667,8 @@ public class InternalDomain
 
       problemIdx++;
     }
-    s += "\t\tnew JSHOP2PlanToJSONFile();" + endl;
+    s += "\t\tJSHOP2PlanToJSONFile planToJSON = new JSHOP2PlanToJSONFile();" + endl;
+    s += "\t\tplanToJSON.generateJSON();" + endl;
     s += "\t\tnew JSHOP2Output();" + endl;
     s += "\t\treturn returnedPlans;" + endl;
     s += "\t}" + endl + endl + "\tpublic static LinkedList<Predicate> getFirstPlanOps() {";
