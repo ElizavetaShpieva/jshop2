@@ -181,8 +181,13 @@ Case3    ((location ?mid) (room ?room)
              ((location ?loc) (not (at robot ?loc)) (not (has robot ?o))(wrong_loc ?o))
              ((!go_to ?loc) (tidy_up ?loc))
 
+<<<<<<< HEAD
             ((location ?loc) (at robot ?loc) (not (has robot ?o)) (not (wrong_loc ?o)) (objects-detected ?loc))
             ((find-nomove ?loc) (find-movable ?loc) (tidy_up ?loc))
+=======
+             ((location ?loc) (at robot ?loc) (not (has robot ?o)) (not (wrong_loc ?o)) (not (dont-move ?o)) (objects-detected ?loc))
+             ((find-nomove ?loc) (find-movable ?loc) (tidy_up ?loc))
+>>>>>>> 1ea0d2af9ce15cf42f41b62d596ff63f51bd7c7d
 
 
             ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc) (not (has robot ?o)) (objects-detected ?loc))
