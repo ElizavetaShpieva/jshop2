@@ -17,6 +17,22 @@
                ((holding ?b))
                ((on-table ?b)))
 
+    (:operator (!put ?b)
+               ((container ?loc))
+               ((holding ?b)(has robot ?b))
+               ((in ?b ?loc)))
+
+    (:operator (!place ?b)
+               ((plane ?loc))
+               ((holding ?b)(has robot ?b))
+               ((on ?b ?loc)))
+
+    (:operator (!hand_over ?b)
+               ((person ?loc))
+               ((holding ?b)(has robot ?b))
+               ((has ?b ?loc)))
+
+
     (:operator (!putdown ?b ?loc)
                ()
                ((holding ?b) (has robot ?b))
@@ -37,10 +53,11 @@
                ((at robot ?to-loc))
                ((at robot ?loc)))
 
-    (:operator (!unstack ?e ?f)
+    (:operator (!to-detect-pose ?robot) 
                ()
-               ((clear ?e) (on ?e ?f))
-               ((holding ?e) (clear ?f)))
+               ()
+               ((detect-pose ?robot)))
+
     (:operator (!approach ?a)
                 ()
                 ()
@@ -103,17 +120,76 @@
              nil
              nil)
 
+
+(:operator (!visit ?waypoint)
+  ()
+  ()
+  ((visited ?waypoint)))
+
+(:operator (!unvisit ?waypoint)
+  ()
+  ((visited ?waypoint))
+  ())
+
+(:method (go_to robot ?to)
+  ((at robot ?from))
+  ((!visit ?from)
+     (go_to robot ?from ?to)
+     (!unvisit ?from))
+)
+
+(:method (go_to robot ?from ?to)
+Case1    ((at robot ?to))
+         ()
+Case2    ((close-by robot ?room ?from ?to) (room ?room)
+         )
+         ((!go_to ?to))
+Case3    ((location ?mid) (room ?room)
+          (close-by robot ?room ?from ?mid)
+          (not (visited ?mid))
+         )
+         ((!go_to ?mid) (!visit ?mid) (go_to robot ?mid ?to) (!unvisit ?mid))
+)
+
+;----------------------------------------------
+  
+
+    (:method (clean_up  ?droom)
+      ((room ?croom)  (room ?droom) (location ?from) (location ?to) (in ?droom ?to) (connect ?droom ?croom) (in ?croom ?from) (at robot ?from))
+      ((!go_to ?to) (clean_up ?droom))
+
+      ((in ?droom ?to) (at robot ?to))
+      ((explore ?droom))
+
+      nil
+      nil
+    )
+
+
+    (:method (explore  ?room)
+      ((in ?room ?from) (at robot ?from) (close-by robot ?room ?from ?to)(not (visited ?from)))
+      ((tidy_up ?from) (!visit ?from) (!go_to ?to) (explore  ?room) (!unvisit ?from))
+
+
+      nil
+      nil
+    )
+
+
     (:method (tidy_up ?loc)
 
-             ((location ?loc) (not (at robot ?loc)) (not (has robot ?o)))
+             ((location ?loc) (not (at robot ?loc)) (not (has robot ?o))(wrong_loc ?o))
              ((!go_to ?loc) (tidy_up ?loc))
 
             ((location ?loc) (at robot ?loc) (not (has robot ?o)) (not (wrong_loc ?o)) (objects-detected ?loc))
-            ((find-movable ?loc) (tidy_up ?loc))
+            ((find-nomove ?loc) (find-movable ?loc) (tidy_up ?loc))
 
 
             ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc) (not (has robot ?o)) (objects-detected ?loc))
             ((bring ?o ?to-loc) (tidy_up ?loc))
+
+            ((object ?o) (location ?loc) (location ?to-loc) (wrong_loc ?o) (belongs ?o ?to-loc) (not (on ?o ?to-loc)) (not (at robot ?to-loc)) (at robot ?loc) (not (has robot ?o)) (objects-detected ?loc) (or (has robot tray) (has external-tray) ))
+            ((bring_objects ?to-loc) (tidy_up ?loc))
 
              ((object ?o) (location ?loc) (at robot ?loc) (not (has robot ?o)) (not(objects-detected ?loc)))
              ((!detect_objects ?loc))
@@ -122,9 +198,35 @@
              nil
              )
 
+
+    (:method (bring_objects ?to-loc)
+
+             ((object ?o) (location ?loc)  (location ?to-loc) (on ?o ?loc))
+             ((bring_objects ?loc ?to-loc))
+               
+               nil
+               nil
+              )
+
+
+
+    (:method (bring_objects ?loc ?to-loc)
+             ((object ?o) (location ?loc) (location ?to-loc) (on ?o ?loc) (not (has robot ?o)))
+             ((get ?o ?loc)(bring ?o ?loc ?to-loc))
+
+             ((object ?o)  (location ?loc) (location ?to-loc) (not (on ?o ?loc)) (has robot ?o))
+             ((carry ?o ?to-loc))
+
+             nil
+             nil
+             )
+
+
+
+
     (:method (bring ?o ?to-loc)
 
-             ((object ?o) (location ?loc)  (location ?to-loc) (on ?o ?loc) (belongs ?o ?to-loc))
+             ((object ?o) (location ?loc)  (location ?to-loc) (on ?o ?loc))
              ((bring ?o ?loc ?to-loc))
                
                nil
@@ -162,7 +264,7 @@
 
     (:method (get ?o)
 
-             ((object ?o) (not (has robot ?o)) (not(objects-detected ?loc)))
+             ((object ?o) (not (has robot ?o)) (on ?o ?loc) (not(objects-detected ?loc)))
              ((detect ?o) (get ?o))
 
              ((object ?o) (not (has robot ?o)) (on ?o ?loc) (not (holding ?o)))
@@ -174,7 +276,7 @@
     (:method (detect ?o)
 
 
-             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (not (holding ?o)))
+             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (not (holding ?o)) (detect-pose ?robot))
              ((!detect ?o))
 
              ((object ?o) (not (has robot ?o))(not (holding ?o)))
@@ -184,10 +286,19 @@
              nil)
 
     (:method (grasp ?o)
+         
 
+             ;;Parameters for grasping
+             ;; ON -  on plane
+             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (on ?o ?loc) (plane ?loc) (not (holding ?o)))
+             ((!pickup ?o)) 
+             ;; INSIDE - inside of cupboard
+             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (on ?o ?loc) (cupboard ?loc) (not (holding ?o)))
+             ((!pickup ?o)) 
+             ;; IN - in container
+             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (on ?o ?loc) (container ?loc) (not (holding ?o)))
+             ((!pickup ?o)) 
 
-             ((object ?o) (not (has robot tray)) (not (has robot ?o)) (on ?o ?loc) (not (holding ?o)))
-             ((!pickup ?o))
 
              ((object ?o) (location ?loc) (location ?to-loc) (has robot tray) (not (has robot ?o)) (not (on-tray ?o)))
              ((!put-on-tray ?o))
@@ -202,8 +313,23 @@
 
 
              ((object ?o) (location ?loc) (at robot ?loc) (has robot ?o))
-             ((!putdown ?o ?loc))
+             ((take_to ?o))
 
+             nil
+             nil)
+
+    (:method (take_to ?o)
+            ;;Parameters for delivering
+            ;;ON - on plane
+             ((object ?o) (location ?loc) (at robot ?loc) (has robot ?o) (or (plane ?loc) (drink ?o)))
+             ((!place ?o))            
+            ;;IN - in container
+             ((object ?o) (location ?loc) (at robot ?loc) (has robot ?o) (or (container ?loc) (trash ?o)))
+             ((!put ?o))
+            ;;TO - to person
+             ((object ?o) (location ?loc) (at robot ?loc) (has robot ?o) (person ?loc))
+             ((!hand_over ?o))
+             
              nil
              nil)
 
