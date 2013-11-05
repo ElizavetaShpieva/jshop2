@@ -1,0 +1,9 @@
+(defproblem problem basic
+  (
+  	(find-person-pose ?robot)
+  	(free way)
+  ) 
+  (
+  	(follow_person ?robot)
+  )
+)

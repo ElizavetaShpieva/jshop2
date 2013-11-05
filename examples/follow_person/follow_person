@@ -1,0 +1,70 @@
+; This extremely simple example shows some of the most essential
+; features of SHOP2.
+
+(defdomain basic (
+  (:operator (!find_person ?robot)
+   ()
+   ()
+   ((person-foind ?robot))
+   )
+
+  (:method (follow_person ?robot)
+
+  ((not (find-person-pose ?robot)) (not(free way)))
+  ((!move_to_find_person_pose))
+
+  ((find-person-pose ?robot) (free way))
+  ((find_person ?robot))
+)
+
+  (:method (find_person ?robot)
+
+  ((find-person-pose ?robot) (free way) (not(person-found ?robot)))
+  ((!find_person ?robot))
+
+   ((find-person-pose ?robot) (free way) (person-foind ?robot))
+  ((memorize_person ?robot))
+)
+
+
+  (:method (find_person ?robot)
+
+  ((person-found ?robot))
+  ((!memorize_person ?robot))
+
+   ((person ?person) (memorized_person ?robot))
+  ((follow ?robot ?person))
+)
+
+
+(:method (follow ?robot ?person)
+
+  ((person ?person) (memorized_person ?robot) (in-front ?person))
+  ((start_follow ?robot ?person) (follow ?robot ?person))
+
+   ((wait-for-command ?robot))
+  ((stop_follow ?robot ?person))
+)
+
+    
+(:method (start_follow ?robot ?person)
+
+  ((start-follow))
+  nil
+
+  ((person ?person) (in-front ?person))
+  ((!start_follow ?robot ?person))
+
+)
+
+(:method (stop_follow ?robot ?person)
+
+  ((start-follow))
+  nil
+
+  ((person-found ?robot) (in-front person))
+  ((start_follow ?robot))
+
+   ((wait-for-command ?robot))
+  ((stop_follow ?robot ?person))
+)

@@ -1,0 +1,8 @@
+action:(!drop kiwi)
+delete:(have kiwi)
+effect:
+------------------------------
+action:(!pickup banjo)
+delete:
+effect:(have banjo)
+------------------------------
